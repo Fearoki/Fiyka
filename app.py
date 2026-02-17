@@ -2,59 +2,51 @@ import streamlit as st
 from gradio_client import Client, handle_file
 import os
 
-# --- APP UI ---
-st.set_page_config(page_title="iPhone 17 Pro Max AI", page_icon="🔥")
-st.title("🔥 Oppo to iPhone: Real Pixel Generator")
-st.write("Bhai, agar pehle enhance nahi ho raha tha, toh ab hoga! (Fixed Logic)")
+st.title("🔥 iPhone 17 Pro Max Ultra-Enhancer")
+st.write("Bhai, agar pehle change nahi ho raha tha, toh ab pakka hoga!")
 
-# --- SIDEBAR SETTINGS (Exact as per your Screenshot) ---
-st.sidebar.header("🔧 Pro Settings")
-u_factor = st.sidebar.slider("Upscale Factor", 1, 4, 2)
-c_scale = st.sidebar.slider("ControlNet Scale", 0.0, 1.5, 0.8) # Badha diya 0.6 se 0.8 taaki details aayein
-d_strength = st.sidebar.slider("Denoise Strength", 0.0, 1.0, 0.5) # Isse 'Zero Enhance' problem fix hogi
-steps = st.sidebar.slider("Inference Steps", 1, 30, 20)
+# Sidebar for Pro-Control
+st.sidebar.header("🔧 Force Settings")
+# Denoise ko 0.5 se upar rakhna hai tabhi farak dikhega
+denoise = st.sidebar.slider("Denoise Strength (Force)", 0.0, 1.0, 0.65)
+# Condition scale AI ko prompt follow karne pe majboor karta hai
+c_scale = st.sidebar.slider("AI Creativity (Condition)", 1, 20, 12)
 
-# --- FILE UPLOAD ---
-img_file = st.file_uploader("Upload Image", type=['jpg', 'png', 'jpeg'])
+uploaded_file = st.file_uploader("Oppo Photo Upload Karo", type=['jpg', 'png', 'jpeg'])
 
-if img_file:
-    # Save file locally for processing
-    with open("input.jpg", "wb") as f:
-        f.write(img_file.getbuffer())
-    
-    if st.button("🚀 Enhance Now"):
-        with st.spinner("AI is hallucinating new pixels..."):
+if uploaded_file:
+    with open("temp.jpg", "wb") as f:
+        f.write(uploaded_file.getbuffer())
+
+    if st.button("✨ Force iPhone Magic"):
+        with st.spinner("AI pixels generate kar raha hai..."):
             try:
                 client = Client("finegrain/finegrain-image-enhancer")
                 
-                # 💡 THE FIX: Prompt ko aur deep banaya hai taaki AI 'soye' na
+                # 💡 THE SECRET SAUCE: Prompt mein 'raw photo' aur 'detailed' dalkar 
+                # AI ko pixels change karne ke liye push kiya hai.
                 result = client.predict(
-                    input_image=handle_file("input.jpg"),
-                    prompt="ultra high definition, extremely detailed skin pores, 8k resolution, sharp focus, cinematic, shot on iphone 17 pro max, realistic textures",
-                    negative_prompt="blurry, low quality, noise, grain, cartoon, painting, digital art, smooth skin, plastic look",
+                    input_image=handle_file("temp.jpg"),
+                    prompt="ultra-realistic 8k photo, extremely detailed skin pores, sharp eyes, iphone 17 pro max cinematic style, high dynamic range, 48mp raw sensor quality",
+                    negative_prompt="blurry, low quality, smooth skin, plastic, cartoon, painting, noise, out of focus",
                     seed=42,
-                    upscale_factor=u_factor,
-                    controlnet_scale=c_scale,
+                    upscale_factor=2,
+                    controlnet_scale=0.7, # Structure ko tight rakhega
                     controlnet_decay=1.0,
-                    condition_scale=10.0, # 6 se badha kar 10 kiya taaki prompt ka asar dikhe
+                    condition_scale=c_scale, # Isse AI 'iPhone' wali baat maanega
                     tile_width=112,
                     tile_height=144,
-                    denoise_strength=d_strength,
-                    num_inference_steps=steps,
+                    denoise_strength=denoise, # Isse Oppo ki noise khatam hogi
+                    num_inference_steps=20,
                     solver="DDIM",
                     api_name="/process"
                 )
-                
-                # Handling the output list
-                output_path = result[0] if isinstance(result, list) else result
-                
-                if output_path:
-                    st.image(output_path, caption="iPhone Level Quality")
-                    with open(output_path, "rb") as file:
-                        st.download_button("📥 Download Photo", file, file_name="enhanced.jpg")
-                else:
-                    st.error("Bhai, server ne blank image di hai. Parameters check kar!")
-                    
-            except Exception as e:
-                st.error(f"Galti ho gayi: {e}")
 
+                output = result[0] if isinstance(result, list) else result
+                st.image(output, caption="Finally! iPhone Quality")
+                
+                with open(output, "rb") as f:
+                    st.download_button("📥 Download", f, file_name="iphone_shot.jpg")
+
+            except Exception as e:
+                st.error(f"Bhai Error aa gaya: {e}")
